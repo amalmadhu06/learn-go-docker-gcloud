@@ -57,7 +57,7 @@ go build -o ./out/dist .
 * `-o` is a flag that specifies the output file name or path for the generated binary file. In this case, it is set to `./out/dist`, which means that the binary file will be named dist and will be placed in the out directory, which is located in the current directory.
 * `.` is the path to the directory containing the Go source code to be compiled.
 
-## 2. Prepare Dockerfile
+## 2. Dockerize
 Create a new `Dockerfile`
 ```bash
 touch Dockerfile
@@ -91,3 +91,65 @@ docker build -t app .
 * `-t` is a flag that is used to specify a tag for the image that is being built. In this case, the tag is set to app.
 * `app` is the name of the image that is being built.
 * `.` specifies the build context for the Dockerfile. In this case, it is set to the current directory.
+
+Test the container is working fine
+```bash
+docker run -p 8888:80 app
+```
+* `docker run` is the command to run a Docker container.
+* `-p 8888:80` is a flag that maps port 80 inside the container to port 8888 on the host machine.We can access the application inside the container by going to `http://localhost:8888` on our host machine's web browser.
+* `app` is the name of the Docker image that the container will be based on. The Docker engine will look for an image named app locally on the machine, and if it doesn't exist, it will try to pull it from a Docker registry.
+
+Open your browser, and go to `localhost:8888`
+You will be be able to bee
+```go
+Hello, World!
+```
+
+## Push image to GCloud Container Registry
+Now that we have successfully generated Docker image for our project, let's try to push this image to Google Cloud Container Registry.
+
+* Make sure you have a Google Cloud Account , Google Cloud CLI installed and you have created a sample project in Google Cloud. 
+
+### Login to Google Cloud from command line using 
+```bash
+gcloud auth login
+```
+This will open a new tab in browser and ask you to select account and authenticate
+
+### Tag the image
+
+* Go to Google Cloud Console/Platform and select your project. 
+* Copy project ID 
+
+In the terminal, 
+tag the image with registry address
+```bash
+docker tag app gcr.io/<project-id-here>/app
+```
+* `docker tag` is the command to tag a Docker image with a new name or a different registry address.
+* `app` is the name of the Docker image that will be tagged.
+* `gcr.io/<project-id-here>/app` is the new name that the image will be tagged with. 
+* `gcr.io` is the Docker registry URL, 
+* `app` in the end is the name of the image in the registry.
+
+Next, push the image
+```bash
+docker push gcr.io/<project-id-here>/app
+```
+Go to Google Cloud Platform --> Select Project --> Container Registry and verify the image was pushed
+
+## Create Cloud Run
+Let's create Cloud Run to run our application
+
+1. Go go Google Cloud Platform
+2. Select project
+3. Open Cloud Run from Left panel
+4. Create Service
+5. Give a name to the service and select a region
+6. Select container image url from Container Registry
+7. In Advanced Settings, change port number to 80
+8. In Authentication, check `Allow unauthenticated invocations` and `Allow all traffic`
+9. Click on create and wait for it to complete
+
+You will get a url for the service. With this url, you can access the web app
